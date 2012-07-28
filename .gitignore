@@ -1,5 +1,6 @@
 *.py[co]
 webther/webther/settings_local.py
+webther/.idea
 
 # Packages
 *.egg
