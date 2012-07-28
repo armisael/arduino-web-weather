@@ -1,4 +1,5 @@
 *.py[co]
+webther/webther/settings_local.py
 
 # Packages
 *.egg
