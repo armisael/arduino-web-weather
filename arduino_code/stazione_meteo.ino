@@ -46,7 +46,7 @@ void setup()
 
 void loop()
 {
-  listen_for_http_requests();
+  listen_for_http_requests();  // TODO[sp] remove this and POST data to the server instead
   Alarm.delay(1000);  // TODO[sp] let this be dynamic!
 }
 
@@ -70,6 +70,7 @@ int init_sd() {
 }
 
 void get_next_filename(char* filename_buf) {
+  // TODO[sp] use the last 8 chars of now() instead next_file_counter
   // generates the next non-existing filename, ready to be created and written.
   // WARNING: names must be short 8.3 (that's why we have to use this method btw)
   String filename;
