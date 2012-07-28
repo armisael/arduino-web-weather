@@ -121,6 +121,8 @@ INSTALLED_APPS = (
 
     'django.contrib.admin',
 
+    'main',
+
     'south',
 )
 
@@ -152,3 +154,8 @@ LOGGING = {
         },
     }
 }
+
+try:
+    from .settings_local import *
+except ImportError:
+    pass
