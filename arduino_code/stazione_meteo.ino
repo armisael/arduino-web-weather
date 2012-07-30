@@ -41,7 +41,7 @@ void setup()
 
 void loop()
 {
-  Alarm.delay(1000);  // how much should this be? I don't have to do anything O.o
+  Alarm.delay(15000);  // how much should this be? I don't have to do anything O.o
 }
 
 
