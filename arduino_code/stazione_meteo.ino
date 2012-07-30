@@ -87,52 +87,48 @@ void dump_data_from_sensors() {
   
   File fout = SD.open(filename_buf, FILE_WRITE);
   if (fout) {
-    fout.println(now());
+    fout.print("timestamp=");
+    fout.print(now());
+    fout.print("&temperature=");
+    fout.print("26.8");
+    fout.println();
     fout.close();
     Serial.println("\tOK");    
   } else {
     Serial.println("\tUnable to write the file");
   }
+  
+  list_directory_and_post_to_server();
 }
 
 
-boolean print_directory(EthernetClient* stream) {
+void list_directory_and_post_to_server() {
   File dir = SD.open("/");
   if (!dir) {
     Serial.println("Directory doesn't exist O.o");
-    return false;
   }
 
   dir.rewindDirectory();
   while(File entry = dir.openNextFile()) {    
     String filename = String(entry.name());
+    boolean success = false;
     if (filename.endsWith(".TXT")) {
-      stream->println(filename);
+      success = post_to_server(&entry);
     }
     entry.close();
+    
+    if (success)
+      delete_file(filename);
   }
   dir.close();
-  return true;
 }
 
 
-boolean print_file(EthernetClient* stream, char *filename) {
-  File fin = SD.open(filename);
-
-  if (fin) {
-    while (fin.available()) {
-      stream->write(fin.read());
-    }
-    fin.close();
-    return true;
-  }  
-  return false;
-}
-
-
-boolean delete_file(char *filename) {
-  if (SD.exists(filename)) {
-    return SD.remove(filename);
+boolean delete_file(String filename) {
+  char filename_buf[13];
+  filename.toCharArray(filename_buf, 13);
+  if (SD.exists(filename_buf)) {
+    return SD.remove(filename_buf);
   }
   return false;
 }
@@ -150,6 +146,51 @@ void init_ethernet() {
   digitalWrite(SD_PIN, HIGH);
 
   Ethernet.begin(mac, my_ip);
+}
+
+
+boolean post_to_server(File *entry) {
+  EthernetClient client;
+  String line;
+
+  Serial.print("sending to the server ");
+  if (client.connect(server_ip, server_port)) {
+
+    Serial.print("\tconnected!");
+    client.println("POST /arduino-post/ HTTP/1.0");
+    client.println("User-Agent: arduino-ethernet-board");
+    client.println("Content-Type: application/x-www-form-urlencoded");
+    client.print("Content-Length: ");
+    client.println(entry->size() - 2);  // remove \r\n
+    client.println();
+
+    while (entry->available()) {
+      client.write(entry->read());
+    }
+
+    boolean success = false;
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        line += c;
+        if (c == '\n') {
+          if (line.indexOf("200 OK") >= 0) {
+            success = true;
+            break;
+          }
+          line = "";
+        }
+      }
+    }
+    client.stop();
+    Serial.print("\tdisconnected with result: ");
+    Serial.println(success);
+    return success;
+    
+  } else {
+    Serial.println("\tconnection failed -.-");
+    return false;
+  }
 }
 
 
