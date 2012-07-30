@@ -7,17 +7,16 @@
 
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x6A, 0x2F };
 IPAddress my_ip(192, 168, 0, 2);
-IPAddress sheeva(192, 168, 0, 112);
-int sheeva_port = 7999;
+IPAddress server_ip(192, 168, 0, 112);
+int server_port = 7999;
 int LED_PIN = 9;
 int SD_PIN = 4;
-EthernetServer server(80);
 
 
 /************************************************
  *  Main Arduino methods
  ***********************************************/
- 
+
 void setup() 
 {
   Serial.begin(9600);
@@ -27,7 +26,7 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   pinMode(SD_PIN, OUTPUT);
   pinMode(SS_PIN, OUTPUT);
-  setSyncProvider(get_timestamp_from_sheeva);
+  setSyncProvider(get_timestamp_from_server);
   
   while(timeStatus() == timeNotSet);
 
@@ -42,8 +41,7 @@ void setup()
 
 void loop()
 {
-  listen_for_http_requests();  // TODO[sp] remove this and POST data to the server instead
-  Alarm.delay(1000);  // TODO[sp] let this be dynamic!
+  Alarm.delay(1000);  // how much should this be? I don't have to do anything O.o
 }
 
 
@@ -105,7 +103,6 @@ boolean print_directory(EthernetClient* stream) {
     return false;
   }
 
-  print_success(stream);
   dir.rewindDirectory();
   while(File entry = dir.openNextFile()) {    
     String filename = String(entry.name());
@@ -123,7 +120,6 @@ boolean print_file(EthernetClient* stream, char *filename) {
   File fin = SD.open(filename);
 
   if (fin) {
-    print_success(stream);
     while (fin.available()) {
       stream->write(fin.read());
     }
@@ -146,7 +142,7 @@ boolean delete_file(char *filename) {
 
 
 /************************************************
- *  WEBSERVER
+ *  ETHERNET METHODS
  ***********************************************/
 
 void init_ethernet() {
@@ -157,83 +153,6 @@ void init_ethernet() {
 }
 
 
-void listen_for_http_requests() {
-  EthernetClient client = server.available();
-  String line = "";
-  String request = "";
-  char resource[12];
-  if (client) {
-    Serial.print("new client");
-    while (client.connected()) {
-      if (client.available()) {
-        char c = client.read();
-        line += c;
-        
-        if (c == '\n') {
-          if (line == "\r\n") {  // request completed
-            
-            Serial.print('\t');
-            Serial.print('"');
-            Serial.print(request);
-            Serial.print('"');
-            Serial.print("\t");
-            Serial.print('"');
-            Serial.print(resource);
-            Serial.print('"');
-            
-            boolean success = false;
-            if (request == "DELETE") {
-              success = delete_file(resource);  // TODO[sp] any kind of security check on this?
-              if (success) {  // we still need to print the success, since it's not done by the delete_file
-                print_success(&client);
-              }
-            } else {
-              if (strlen(resource) == 0) {
-                success = print_directory(&client);              
-              } else {
-                success = print_file(&client, resource);
-              }
-            }
-            
-            if (!success) {
-              print_404(&client);
-            }
-            break;
-          } else {  // still something to say
-            if (request == "") {
-              int first_space = line.indexOf(' ');
-              int second_space = line.indexOf(' ', first_space + 1);
-              request = line.substring(0, first_space);
-              // [sp] this happened: new client	"GET"	""R+¥±¥é¥¹¹..
-              line.substring(first_space + 2, second_space).toCharArray(resource, 12);  // +1 if for the space, the other +1 is to remove the initial /
-            }
-            line = "";
-          }
-        }
-      }
-    }
-    // give the web browser time to receive the data
-    delay(1);
-    // close the connection:
-    client.stop();
-    Serial.println("\tDONE");
-  }
-}
-
-void print_success(EthernetClient *stream) {
-  stream->println("HTTP/1.1 200 OK");
-  stream->println("Content-Type: text/csv");
-  stream->println("Connnection: close");
-  stream->println();
-}
-
-void print_404(EthernetClient *stream) {
-  stream->println("HTTP/1.1 404 NOT FOUND");
-  stream->println("Connnection: close");
-  stream->println();
-}
-
-
 
 
 
@@ -241,18 +160,18 @@ void print_404(EthernetClient *stream) {
  *  TIME METHODS
  ***********************************************/
 
-time_t get_timestamp_from_sheeva() {
+time_t get_timestamp_from_server() {
   EthernetClient client;
   String line = "";
 
   init_ethernet();
   
-  Serial.print("connecting to the sheeva...");
-  if (client.connect(sheeva, sheeva_port)) {
+  Serial.print("asking current timestamp to the server...");
+  if (client.connect(server_ip, server_port)) {
 
     Serial.print("\tconnected!");
     client.println("GET /arduino-timestamp/ HTTP/1.0");
-    client.println("User-Agent: arduino-ethernet");
+    client.println("User-Agent: arduino-ethernet-board");
     client.println();
 
     while (client.connected()) {
