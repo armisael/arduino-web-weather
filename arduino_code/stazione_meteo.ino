@@ -7,8 +7,8 @@
 
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x6A, 0x2F };
 IPAddress my_ip(192, 168, 0, 2);
-IPAddress sheeva(192, 168, 0, 101);
-int next_file_counter = 0;
+IPAddress sheeva(192, 168, 0, 112);
+int sheeva_port = 7999;
 int LED_PIN = 9;
 int SD_PIN = 4;
 EthernetServer server(80);
@@ -32,10 +32,6 @@ void setup()
   while(timeStatus() == timeNotSet);
 
   init_sd();
-  
-  // [sp] this may be kinda expensive, let us do it here so it's ready afterwards.
-  char filename_buf[12];
-  get_next_filename(filename_buf);
  
   Alarm.timerRepeat(5, dump_data_from_sensors);  // every 5 seconds
 //  Alarm.timerRepeat(5 * 60, dump_data_from_sensors);  // every 5 minutes
@@ -69,22 +65,24 @@ int init_sd() {
   return 1;
 }
 
-void get_next_filename(char* filename_buf) {
-  // TODO[sp] use the last 8 chars of now() instead next_file_counter
+void get_next_filename(char* filename_buf, int filename_buf_size) {
   // generates the next non-existing filename, ready to be created and written.
   // WARNING: names must be short 8.3 (that's why we have to use this method btw)
+  time_t next_file_counter = now();
   String filename;
+  String counter_str;
   do {
-    filename = String(next_file_counter++) + ".TXT";
-    filename.toCharArray(filename_buf, 12);
+    counter_str = String(next_file_counter++);
+    filename = counter_str.substring(counter_str.length() - 8) + ".TXT";
+    filename.toCharArray(filename_buf, filename_buf_size);
   } while (SD.exists(filename_buf));
 }
 
 
 void dump_data_from_sensors() {
 
-  char filename_buf[12];
-  get_next_filename(filename_buf);
+  char filename_buf[13];
+  get_next_filename(filename_buf, 13);
 
   Serial.print("writing ");
   Serial.print(filename_buf);
@@ -93,12 +91,7 @@ void dump_data_from_sensors() {
   if (fout) {
     fout.println(now());
     fout.close();
-    
-    if (!SD.exists(filename_buf)) {
-      Serial.println("\tThe file doesn't exist O.o");
-    } else {
-      Serial.println("\tOK");
-    }
+    Serial.println("\tOK");    
   } else {
     Serial.println("\tUnable to write the file");
   }
@@ -147,6 +140,9 @@ boolean delete_file(char *filename) {
   }
   return false;
 }
+
+
+
 
 
 /************************************************
@@ -252,10 +248,10 @@ time_t get_timestamp_from_sheeva() {
   init_ethernet();
   
   Serial.print("connecting to the sheeva...");
-  if (client.connect(sheeva, 80)) {
+  if (client.connect(sheeva, sheeva_port)) {
 
     Serial.print("\tconnected!");
-    client.println("GET /arduino/ HTTP/1.0");
+    client.println("GET /arduino-timestamp/ HTTP/1.0");
     client.println("User-Agent: arduino-ethernet");
     client.println();
 
