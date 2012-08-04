@@ -33,7 +33,7 @@ void setup() {
   Serial.begin(9600);
  
   Serial.println("\n\nInitializing...");
-  Serial.println("Free RAM: ");
+  Serial.print("Free RAM: ");
   Serial.println(FreeRam());  
   
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
@@ -50,7 +50,7 @@ void setup() {
   setSyncProvider(get_timestamp_from_server);
   while(timeStatus() == timeNotSet);
 
-  Alarm.timerRepeat(5, dump_data_from_sensors);  // every 5 seconds
+  Alarm.timerRepeat(10, dump_data_from_sensors);  // every 5 seconds
 //  Alarm.timerRepeat(5 * 60, dump_data_from_sensors);  // every 5 minutes
 
   Serial.println("STARTED");
@@ -158,36 +158,32 @@ boolean post_to_server(char* filename) {
     client.println("POST /arduino-post/ HTTP/1.0");
     client.println("User-Agent: arduino-ethernet-board");
     client.println("Content-Type: application/x-www-form-urlencoded");
-    client.print("Content-Length: ");
+    client.print  ("Content-Length: ");
     client.println(file.fileSize() - 2);  // remove \r\n
     client.println();
 
-    int16_t c;
+    char c;
     while ((c = file.read()) > 0) {
-        client.print((char)c);
+        client.print(c);
     }
     file.close();
 
     boolean success = false;
     while (client.connected()) {
       if (client.available()) {
-        char c = client.read();
+        c = client.read();
         
         // If it isn't a new line, add the character to the buffer
         if (c != '\n' && c != '\r') {
-          clientline[index] = c;
-          index++;
-          // are we too big for the buffer? start tossing out data
-          if (index >= BUFSIZ) 
-            index = BUFSIZ -1;
-          
-          // continue to read more data!
+          if (index < BUFSIZ) {
+            clientline[index++] = c;
+          }
           continue;
         }
         
         // got a \n or \r new line, which means the string is done
         clientline[index] = 0;
-        
+
         if (strstr(clientline, "200 OK") != 0) {
           success = true;
         }
@@ -196,6 +192,7 @@ boolean post_to_server(char* filename) {
     }
     delay(1);
     client.stop();
+
     Serial.print("\tdisconnected with result: ");
     Serial.println(success);
     return success;
@@ -214,7 +211,7 @@ boolean post_to_server(char* filename) {
  *  TIME METHODS
  ***********************************************/
 
-time_t get_timestamp_from_server() {  // TODO[sp] avoid using String, use char[]
+time_t get_timestamp_from_server() {
   EthernetClient client;
   String line = "";
   
