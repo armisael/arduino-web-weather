@@ -155,7 +155,9 @@ boolean post_to_server(char* filename) {
     }
 
     Serial.print("\tconnected!");
-    client.println("POST /arduino-post/ HTTP/1.0");
+    client.print  ("POST /arduino-post/?f=");
+    client.print  (filename);
+    client.println(" HTTP/1.0");
     client.println("User-Agent: arduino-ethernet-board");
     client.println("Content-Type: application/x-www-form-urlencoded");
     client.print  ("Content-Length: ");
