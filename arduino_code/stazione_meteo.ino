@@ -22,7 +22,7 @@ void setup()
   Serial.begin(9600);
   while (!Serial);
   
-  Serial.println("Initializing...");
+  Serial.println("\n\nInitializing...");
   pinMode(LED_PIN, OUTPUT);
   pinMode(SD_PIN, OUTPUT);
   pinMode(SS_PIN, OUTPUT);
@@ -111,11 +111,20 @@ void list_directory_and_post_to_server() {
   dir.rewindDirectory();
   while(File entry = dir.openNextFile()) {    
     String filename = String(entry.name());
+    String data = "";
     boolean success = false;
     if (filename.endsWith(".TXT")) {
-      success = post_to_server(&entry);
+      Serial.println(filename);
+      while (entry.available()) {
+        char c = entry.read();
+        data += c;
+      }
     }
     entry.close();
+    
+    if (data)
+//      success = post_to_server(data);
+      Serial.println(data);
     
     if (success)
       delete_file(filename);
@@ -149,9 +158,10 @@ void init_ethernet() {
 }
 
 
-boolean post_to_server(File *entry) {
+boolean post_to_server(String data) {
   EthernetClient client;
   String line;
+  digitalWrite(SD_PIN, HIGH);
 
   Serial.print("sending to the server ");
   if (client.connect(server_ip, server_port)) {
@@ -161,12 +171,11 @@ boolean post_to_server(File *entry) {
     client.println("User-Agent: arduino-ethernet-board");
     client.println("Content-Type: application/x-www-form-urlencoded");
     client.print("Content-Length: ");
-    client.println(entry->size() - 2);  // remove \r\n
+    client.println(data.length());  // remove \r\n
     client.println();
-
-    while (entry->available()) {
-      client.write(entry->read());
-    }
+    
+    client.print(data);
+    client.println();
 
     boolean success = false;
     while (client.connected()) {
@@ -185,6 +194,7 @@ boolean post_to_server(File *entry) {
     client.stop();
     Serial.print("\tdisconnected with result: ");
     Serial.println(success);
+  digitalWrite(SD_PIN, LOW);
     return success;
     
   } else {
@@ -233,4 +243,5 @@ time_t get_timestamp_from_server() {
     return 0;
   }
 }
+
 
