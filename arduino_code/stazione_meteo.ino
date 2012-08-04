@@ -83,13 +83,13 @@ void get_next_filename(char* filename) {
 
 void dump_data_from_sensors() {
 
-  char filename_buf[FILESIZ];
-  get_next_filename(filename_buf);
+  char filename[FILESIZ];
+  get_next_filename(filename);
 
   Serial.print("writing ");
-  Serial.print(filename_buf);
+  Serial.print(filename);
   
-  if (!file.open(&root, filename_buf, O_CREAT | O_WRITE)) {
+  if (!file.open(&root, filename, O_CREAT | O_WRITE)) {
     Serial.println("\tUnable to write the file");
     return;
   }
@@ -139,6 +139,7 @@ void list_directory_and_post_to_server() {
   }
 }
 
+// TODO[sp] this sometimes fails to mark as success some successful requests
 boolean post_to_server(char* filename) {
   char clientline[BUFSIZ];
   int index = 0;
