@@ -33,7 +33,7 @@ void setup() {
   Serial.begin(9600);
  
   Serial.println("\n\nInitializing...");
-  PgmPrint("Free RAM: ");
+  Serial.println("Free RAM: ");
   Serial.println(FreeRam());  
   
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
@@ -50,7 +50,7 @@ void setup() {
   setSyncProvider(get_timestamp_from_server);
   while(timeStatus() == timeNotSet);
 
-  Alarm.timerRepeat(10, dump_data_from_sensors);  // every 5 seconds
+  Alarm.timerRepeat(5, dump_data_from_sensors);  // every 5 seconds
 //  Alarm.timerRepeat(5 * 60, dump_data_from_sensors);  // every 5 minutes
 
   Serial.println("STARTED");
@@ -66,22 +66,18 @@ void loop()
 
 
 
-
 /************************************************
  *  READ/WRITE METHODS
  ***********************************************/
 
-void get_next_filename(char* filename_buf) {  // TODO[sp] avoid using String, use char[]
+void get_next_filename(char* filename) {
   // generates the next non-existing filename, ready to be created and written.
   // WARNING: names must be short 8.3 (that's why we have to use this method btw)
   time_t next_file_counter = now();
-  String filename;
-  String counter_str;
   do {
-    counter_str = String(next_file_counter++);
-    filename = counter_str.substring(counter_str.length() - 8) + ".TXT";
-    filename.toCharArray(filename_buf, FILESIZ);
-  } while (root.exists(filename_buf));
+    String(next_file_counter++).substring(2).toCharArray(filename, FILESIZ);
+    strcpy(filename + 8, ".TXT");   
+  } while (root.exists(filename));
 }
 
 
@@ -135,7 +131,7 @@ void list_directory_and_post_to_server() {
     // filter out files that do not end with TXT
     if (strcmp((char*)p.name + 8, "TXT") == 0) {
       strncpy(filename, (char*)p.name, 8);
-      strncpy(filename + 8, ".TXT\0", 5);
+      strcpy(filename + 8, ".TXT");
       if(post_to_server(filename)) {
         root.remove(&root, filename);
       }
