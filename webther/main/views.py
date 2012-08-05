@@ -1,4 +1,6 @@
+import time
 import calendar
+from datetime import datetime
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -29,4 +31,14 @@ class ArduinoPost(View):
     def post(self, request):
         print "=" * 100
         print request.POST
+
+        recorded_at = datetime(*time.gmtime(request.POST['timezone'])[:6],
+                               tzinfo=timezone.utc),
+
+        WeatherData.objects.create(
+            recorded_at=recorded_at,
+            temperature=request.POST.get('temperature'),
+            humidity=request.POST.get('humidity'),
+            pressure=request.POST.get('pressure'),
+        )
         return HttpResponse(content='', status=200)
