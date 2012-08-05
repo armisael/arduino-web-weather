@@ -43,12 +43,6 @@ DHT22 myDHT22(DHT22_PIN);
  *  Main Arduino methods
  ***********************************************/
 void setup() {
-  Serial.begin(9600);
- 
-  Serial.println("\n\nInitializing...");
-  Serial.print("Free RAM: ");
-  Serial.println(FreeRam());
-  
   Wire.begin();
   myBMP085.init();
   
@@ -57,9 +51,9 @@ void setup() {
   pinMode(10, OUTPUT);                       // set the SS pin as an output (necessary!)
   digitalWrite(10, HIGH);                    // but turn off the W5100 chip!
 
-  if (!card.init(SPI_HALF_SPEED, 4)) Serial.println("card.init failed!");
-  if (!volume.init(&card)) Serial.println("vol.init failed!");
-  if (!root.openRoot(&volume)) Serial.println("openRoot failed");
+  if (!card.init(SPI_HALF_SPEED, 4)) ;
+  if (!volume.init(&card)) ;
+  if (!root.openRoot(&volume)) ;
 
   Ethernet.begin(mac, ip);
 
@@ -68,8 +62,6 @@ void setup() {
 
   Alarm.timerRepeat(10, dump_data_from_sensors);  // every 5 seconds
 //  Alarm.timerRepeat(5 * 60, dump_data_from_sensors);  // every 5 minutes
-
-  Serial.println("STARTED");
 }
 
 
@@ -106,17 +98,7 @@ void dump_data_from_sensors() {
   char filename[FILESIZ];
   get_next_filename(filename);
 
-  Serial.print("writing ");
-  Serial.print(filename);
-  Serial.print("\t");
-  Serial.print(temperature);
-  Serial.print("\t");
-  Serial.print(humidity);
-  Serial.print("\t");
-  Serial.print(pressure);
-  
   if (!file.open(&root, filename, O_CREAT | O_WRITE)) {
-    Serial.println("\tUnable to write the file");
     return;
   }
 
@@ -129,8 +111,7 @@ void dump_data_from_sensors() {
   file.print("&pressure=");
   file.print(pressure);
   file.println();
-  file.close();
-  Serial.println("\tOK");    
+  file.close(); 
   
   list_directory_and_post_to_server();
 }
@@ -174,17 +155,12 @@ boolean post_to_server(char* filename) {
   char clientline[BUFSIZ];
   int index = 0;
 
-  Serial.print("sending to the server ");
-  Serial.print(filename);   
   if (client.connect(server_ip, server_port)) {
     
     if (! file.open(&root, filename, O_READ)) {
-      Serial.print("\tunable to read file ");
-      Serial.println(filename);
       return false;
     }
 
-    Serial.print("\tconnected!");
     client.print  ("POST /arduino-post/?f=");
     client.print  (filename);
     client.println(" HTTP/1.0");
@@ -225,12 +201,9 @@ boolean post_to_server(char* filename) {
     delay(1);
     client.stop();
 
-    Serial.print("\tdisconnected with result: ");
-    Serial.println(success);
     return success;
     
   } else {
-    Serial.println("\tconnection failed -.-");
     return false;
   }
 }
@@ -277,10 +250,8 @@ time_t get_timestamp_from_server() {
   EthernetClient client;
   String line = "";
   
-  Serial.print("asking current timestamp to the server...");
   if (client.connect(server_ip, server_port)) {
 
-    Serial.print("\tconnected!");
     client.println("GET /arduino-timestamp/ HTTP/1.0");
     client.println("User-Agent: arduino-ethernet-board");
     client.println();
@@ -295,11 +266,9 @@ time_t get_timestamp_from_server() {
       }
     }
     client.stop();
-    Serial.println("\tdisconnected");
     return line.toInt();
     
   } else {
-    Serial.println("\tconnection failed -.-");
     return get_timestamp_from_server();
   }
 }
