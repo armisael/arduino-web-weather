@@ -17,16 +17,16 @@
 #define FILESIZ 13
 #define DHT22_PIN 7
 #define BMP085_PIN 3
-#define READ_INTERVAL 10
-//#define READ_INTERVAL 60 * 5
+//#define READ_INTERVAL 10
+#define READ_INTERVAL 60 * 5
 
 /************ ETHERNET STUFF ************/
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x6A, 0x2F };
 byte ip[] = { 192, 168, 0, 2 };
-IPAddress server_ip(192, 168, 0, 112);
-//IPAddress server_ip(192, 168, 0, 101);
-int server_port = 7999;
-//int server_port = 80;
+//IPAddress server_ip(192, 168, 0, 112);
+IPAddress server_ip(192, 168, 0, 101);
+//int server_port = 7999;
+int server_port = 80;
 EthernetClient client;
 
 /************ SDCARD STUFF ************/
@@ -277,6 +277,7 @@ time_t get_timestamp_from_server() {
     return get_timestamp_from_server();
   }
 }
+
 
 
 
