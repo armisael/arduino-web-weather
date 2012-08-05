@@ -1,5 +1,10 @@
+import logging
 from collections import defaultdict
+
 from django.http import HttpResponse
+
+
+logger = logging.getLogger("main.middleware")
 
 
 class SpyMiddleware(object):
@@ -11,6 +16,8 @@ class SpyMiddleware(object):
     failed_requests = defaultdict(int)
 
     def process_exception(self, request, exception):
+        logger.exception(exception)
+
         if request.path != '/arduino-post/':
             return
 
