@@ -1,10 +1,13 @@
+import time
 import calendar
+from datetime import datetime
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.list import ListView
 from django.views.generic import View
 from django.utils import timezone
+from main.helpers import float_or_none
 
 from main.models import WeatherData
 
@@ -29,4 +32,19 @@ class ArduinoPost(View):
     def post(self, request):
         print "=" * 100
         print request.POST
+
+        timetuple = time.gmtime(float(request.POST['timestamp']))[:6]
+        recorded_at = datetime(*timetuple, tzinfo=timezone.utc)
+        temperature = float_or_none(request.POST.get('temperature'))
+        humidity = float_or_none(request.POST.get('humidity'))
+        pressure = float_or_none(request.POST.get('pressure'))
+
+        print recorded_at, temperature, humidity, pressure
+
+        WeatherData.objects.create(
+            recorded_at=recorded_at,
+            temperature=temperature,
+            humidity=humidity,
+            pressure=pressure,
+        )
         return HttpResponse(content='', status=200)
