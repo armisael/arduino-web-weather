@@ -8,7 +8,12 @@
     <h1>Weather data</h1>
     <ul>
         {% for object in object_list %}
-        <li>{{ object.recorded_at }} : <b>{{ object.temperature }}</b></li>
+        <li>
+            {{ object.recorded_at|date:'r' }} :
+            <b>Temperatura</b>: {{ object.temperature }} &#176;C -
+            <b>Umidità</b>: {{ object.humidity }} % -
+            <b>Pressione</b>: {% widthratio object.pressure|default_if_none:0 100 1 %} hPa
+        </li>
         {% endfor %}
     </ul>
 </body>
