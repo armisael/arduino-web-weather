@@ -7,3 +7,5 @@ class WeatherData(TimeStampedModel):
     """
     recorded_at = models.DateTimeField(unique=True)
     temperature = models.FloatField(null=True)
+    humidity = models.FloatField(null=True)
+    pressure = models.FloatField(null=True)
