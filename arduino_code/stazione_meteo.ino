@@ -1,9 +1,22 @@
+// sensors libs
+#include <Wire.h>
+#include <BMP085.h>
+#include <DHT22.h>
+// SD libs
 #include <SdFat.h>
 #include <SdFatUtil.h>
+// time libs
 #include <Time.h>
 #include <TimeAlarms.h>
+// ethernet libs
 #include <Ethernet.h>
 #include <SPI.h>
+
+/************ SOME DEF STUFF ************/
+#define BUFSIZ 100
+#define FILESIZ 13
+#define DHT22_PIN 7
+#define BMP085_PIN 3
 
 /************ ETHERNET STUFF ************/
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x6A, 0x2F };
@@ -18,9 +31,9 @@ SdVolume volume;
 SdFile root;
 SdFile file;
 
-// How big our line buffer should be. 100 is plenty!
-#define BUFSIZ 100
-#define FILESIZ 13
+/************ SENSORS STUFF ************/
+BMP085 myBMP085(BMP085_PIN);
+DHT22 myDHT22(DHT22_PIN);
 
 
 
@@ -34,7 +47,10 @@ void setup() {
  
   Serial.println("\n\nInitializing...");
   Serial.print("Free RAM: ");
-  Serial.println(FreeRam());  
+  Serial.println(FreeRam());
+  
+  Wire.begin();
+  myBMP085.init();
   
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
   // breadboards.  use SPI_FULL_SPEED for better performance.
@@ -82,12 +98,22 @@ void get_next_filename(char* filename) {
 
 
 void dump_data_from_sensors() {
+  get_data_from_sensors();
+  float temperature = get_temperature();
+  float humidity = get_humidity();
+  float pressure = get_pressure();
 
   char filename[FILESIZ];
   get_next_filename(filename);
 
   Serial.print("writing ");
   Serial.print(filename);
+  Serial.print("\t");
+  Serial.print(temperature);
+  Serial.print("\t");
+  Serial.print(humidity);
+  Serial.print("\t");
+  Serial.print(pressure);
   
   if (!file.open(&root, filename, O_CREAT | O_WRITE)) {
     Serial.println("\tUnable to write the file");
@@ -97,7 +123,11 @@ void dump_data_from_sensors() {
   file.print("timestamp=");
   file.print(now());
   file.print("&temperature=");
-  file.print("26.8");
+  file.print(temperature);
+  file.print("&humidity=");
+  file.print(humidity);
+  file.print("&pressure=");
+  file.print(pressure);
   file.println();
   file.close();
   Serial.println("\tOK");    
@@ -210,6 +240,36 @@ boolean post_to_server(char* filename) {
 
 
 /************************************************
+ *  SENSORS METHODS
+ ***********************************************/
+DHT22_ERROR_t dht22_state;
+void get_data_from_sensors() {
+  dht22_state = myDHT22.readData();
+  myBMP085.readData();
+}
+
+float get_temperature() {
+  float temperature = myBMP085.getTemperature() * 0.1;
+  if (dht22_state == DHT_ERROR_NONE)
+    temperature = (temperature + myDHT22.getTemperatureC()) / 2;
+  return temperature;
+}
+
+float get_humidity() {
+  if (dht22_state == DHT_ERROR_NONE)
+    return myDHT22.getHumidity();
+  return -1;
+}
+
+float get_pressure() {
+  return myBMP085.getPressure();
+}
+
+
+
+
+
+/************************************************
  *  TIME METHODS
  ***********************************************/
 
@@ -240,7 +300,7 @@ time_t get_timestamp_from_server() {
     
   } else {
     Serial.println("\tconnection failed -.-");
-    return 0;
+    return get_timestamp_from_server();
   }
 }
 
