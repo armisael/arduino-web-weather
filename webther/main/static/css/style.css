@@ -1,0 +1,7 @@
+.nav-pills.small {
+    margin: 0;
+}
+
+.nav-pills.small li a {
+    padding: 4px 8px;
+}

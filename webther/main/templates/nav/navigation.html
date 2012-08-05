@@ -1,0 +1,12 @@
+{% load main_tags %}
+{% load url from future %}
+
+<ul class="nav nav-pills small">
+{% for entry in entries %}
+    {% with label=entry|date:format %}
+        <li class="{{ label|int_cmp:current|yesno:'active,' }}">
+            <a href="{% get_nav_url url_name year month label %}">{{ label }}</a>
+        </li>
+    {% endwith %}
+{% endfor %}
+</ul>
