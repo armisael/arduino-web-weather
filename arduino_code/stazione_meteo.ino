@@ -17,12 +17,16 @@
 #define FILESIZ 13
 #define DHT22_PIN 7
 #define BMP085_PIN 3
+#define READ_INTERVAL 10
+//#define READ_INTERVAL 60 * 5
 
 /************ ETHERNET STUFF ************/
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x6A, 0x2F };
 byte ip[] = { 192, 168, 0, 2 };
 IPAddress server_ip(192, 168, 0, 112);
+//IPAddress server_ip(192, 168, 0, 101);
 int server_port = 7999;
+//int server_port = 80;
 EthernetClient client;
 
 /************ SDCARD STUFF ************/
@@ -60,8 +64,7 @@ void setup() {
   setSyncProvider(get_timestamp_from_server);
   while(timeStatus() == timeNotSet);
 
-  Alarm.timerRepeat(10, dump_data_from_sensors);  // every 5 seconds
-//  Alarm.timerRepeat(5 * 60, dump_data_from_sensors);  // every 5 minutes
+  Alarm.timerRepeat(READ_INTERVAL, dump_data_from_sensors);
 }
 
 
@@ -165,6 +168,7 @@ boolean post_to_server(char* filename) {
     client.print  (filename);
     client.println(" HTTP/1.0");
     client.println("User-Agent: arduino-ethernet-board");
+    client.println("Host: webther.sundust.doesntexist.com");
     client.println("Content-Type: application/x-www-form-urlencoded");
     client.print  ("Content-Length: ");
     client.println(file.fileSize() - 2);  // remove \r\n
@@ -253,6 +257,7 @@ time_t get_timestamp_from_server() {
   if (client.connect(server_ip, server_port)) {
 
     client.println("GET /arduino-timestamp/ HTTP/1.0");
+    client.println("Host: webther.sundust.doesntexist.com");
     client.println("User-Agent: arduino-ethernet-board");
     client.println();
 
@@ -272,4 +277,6 @@ time_t get_timestamp_from_server() {
     return get_timestamp_from_server();
   }
 }
+
+
 
