@@ -1,7 +1,26 @@
-.nav-pills.small {
-    margin: 0;
+/*.nav-pills.small {*/
+    /*margin: 0;*/
+/*}*/
+
+/*.nav-pills.small li a {*/
+    /*padding: 4px 8px;*/
+/*}*/
+
+.nav-pills-magic {
+    list-style: none;
+    display: inline-block;
+    margin: 5px;
 }
 
-.nav-pills.small li a {
-    padding: 4px 8px;
+.nav-pills-magic li.active {
+    font-size: 2em;
+}
+
+.nav-pills-magic li.active.quiet {
+    color: #bbb;
+}
+
+.nav-pills-magic li:not(.active) {
+    display: none;
+    float: left;
 }
