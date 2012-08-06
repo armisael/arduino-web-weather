@@ -43,7 +43,8 @@ def render_nav_month(year, month):
 def render_nav_day(year, month, day):
     entries = list(build_navigation_entries(
         start_date=datetime(year, month, 1),
-        end_date=datetime(year, month + 1, 1) - timedelta(days=1),
+        end_date=datetime(year + month / 12, month % 12 + 1, 1)
+                            - timedelta(days=1),
         offset=timedelta(days=1)
     ))
 
