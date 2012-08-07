@@ -1,0 +1,27 @@
+{% extends "site_base.html" %}
+
+{% block title %}{{ day }}/{{ month }}/{{ year }}{% endblock %}
+
+
+{% block content %}
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Data</th>
+            <th>Temperatura</th>
+            <th>Umidità</th>
+            <th>Pressione</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.recorded_at|date:'r' }}</td>
+            <td>{{ row.temperature }} &#176;C</td>
+            <td>{{ row.humidity }} %</td>
+            <td>{% widthratio row.pressure|default_if_none:0 100 1 %} hPa</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4"><em>Nessun dato</em></td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

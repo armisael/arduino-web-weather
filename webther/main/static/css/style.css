@@ -1,0 +1,31 @@
+body {
+    margin-top: 20px;
+}
+
+.content {
+    display: none;
+}
+
+.navigation {
+    display: inline-block;
+    margin: 5px;
+}
+
+.navigation span {
+    font-size: 2em;
+    color: #08c;
+    cursor: pointer;
+    display: inline;
+}
+
+.navigation span.quiet {
+    color: #bbb;
+}
+
+.popover {
+    width: 190px;
+}
+
+.popover-inner {
+    width: 100%;
+}

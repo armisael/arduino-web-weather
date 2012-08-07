@@ -1,10 +1,11 @@
 import time
 import calendar
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.list import ListView
+from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic import View
 from django.utils import timezone
 from main.helpers import float_or_none
@@ -12,8 +13,53 @@ from main.helpers import float_or_none
 from main.models import WeatherData
 
 
-class WeatherDataListView(ListView):
-    model = WeatherData
+class TodayView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self):
+        today = datetime.today()
+        return reverse('day', args=('%04d' % today.year,
+                                    '%02d' % today.month,
+                                    '%02d' % today.day
+            )
+        )
+
+
+class YearView(TemplateView):
+    template_name = 'main/year.html'
+
+    def get_context_data(self, **kwargs):
+        return {
+            'year': int(kwargs.get('year')),
+        }
+
+
+class MonthView(TemplateView):
+    template_name = 'main/month.html'
+
+    def get_context_data(self, **kwargs):
+        return {
+            'year': int(kwargs.get('year')),
+            'month': int(kwargs.get('month')),
+        }
+
+
+class DayView(TemplateView):
+    template_name = 'main/day.html'
+
+    def get_context_data(self, **kwargs):
+        day = datetime(int(kwargs.get('year')),
+                       int(kwargs.get('month')),
+                       int(kwargs.get('day')),
+                       0, 0, 0, tzinfo=timezone.get_default_timezone())
+        to_date = day + timedelta(days=1)
+        return {
+            'year': day.year,
+            'month': day.month,
+            'day': day.day,
+            'data': WeatherData.objects.filter(recorded_at__gte=day,
+                                               recorded_at__lt=to_date)
+        }
 
 
 class ArduinoTimestamp(View):
