@@ -1,22 +1,26 @@
 {% load main_tags %}
 {% load url from future %}
 
-<ul class="nav-pills-magic">
-    {% for entry in entries %}
-        {% with label=entry|date:format %}
-            {% with active=label|int_cmp:current  %}
-                <li class="{{ active|yesno:'active,' }}">
-                    <a href="{% if not active %}{% get_nav_url url_name year month label %}{% else %}#{% endif %}">
-                        {{ label }}
-                    </a>
-                </li>
-            {% endwith %}
-        {% endwith %}
-    {% endfor %}
+{# TODO[sp] up/down arrows #}
+{# TODO[sp] "x" to remove this #}
 
-    {% if not current %}
-        <li class="active quiet">
-            xx
-        </li>
-    {% endif %}
-</ul>
+<div class="navigation">
+    <span class="make-popover {{ current|yesno:',quiet' }}" >
+        {{ current|default:'xx' }}
+        <div class="content">
+            <ul class="nav nav-pills">
+                {% for entry in entries %}
+                    {% with label=entry|date:format %}
+                        {% with active=label|int_cmp:current  %}
+                            <li class="{{ active|yesno:'active,' }}">
+                                <a href="{% if not active %}{% get_nav_url url_name year month label %}{% else %}#{% endif %}">
+                                    {{ label }}
+                                </a>
+                            </li>
+                        {% endwith %}
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        </div>
+    </span>
+</div>

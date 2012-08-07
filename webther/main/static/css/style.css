@@ -1,26 +1,31 @@
-/*.nav-pills.small {*/
-    /*margin: 0;*/
-/*}*/
+body {
+    margin-top: 20px;
+}
 
-/*.nav-pills.small li a {*/
-    /*padding: 4px 8px;*/
-/*}*/
+.content {
+    display: none;
+}
 
-.nav-pills-magic {
-    list-style: none;
+.navigation {
     display: inline-block;
     margin: 5px;
 }
 
-.nav-pills-magic li.active {
+.navigation span {
     font-size: 2em;
+    color: #08c;
+    cursor: pointer;
+    display: inline;
 }
 
-.nav-pills-magic li.active.quiet {
+.navigation span.quiet {
     color: #bbb;
 }
 
-.nav-pills-magic li:not(.active) {
-    display: none;
-    float: left;
+.popover {
+    width: 190px;
+}
+
+.popover-inner {
+    width: 100%;
 }

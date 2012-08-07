@@ -14,6 +14,8 @@ from main.models import WeatherData
 
 
 class TodayView(RedirectView):
+    permanent = False
+
     def get_redirect_url(self):
         today = datetime.today()
         return reverse('day', args=('%04d' % today.year,
