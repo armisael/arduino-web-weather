@@ -2,7 +2,6 @@ Django==1.4
 django-extensions==0.9
 
 South==0.7.5
-psycopg2==2.4.5
 
 ipython==0.13
 pytz==2012d
