@@ -1,4 +1,4 @@
-Django==1.4
+Django==1.11.28
 django-extensions==0.9
 
 South==0.7.5
